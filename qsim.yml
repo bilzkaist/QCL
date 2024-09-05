@@ -42,7 +42,7 @@ dependencies:
   - pydot
   - graphviz
   - rise
-    - pip:
+  - pip:
       - torchsummary
       - pylatexenc
       - pillow
