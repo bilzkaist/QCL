@@ -2,11 +2,9 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score
-from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.ensemble import IsolationForest
 from sklearn.svm import OneClassSVM
 from sklearn.neighbors import LocalOutlierFactor
-from sklearn.linear_model import LogisticRegression
-from sklearn.neural_network import MLPClassifier
 from qiskit import Aer, QuantumCircuit, execute
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
@@ -50,16 +48,6 @@ def load_datasets():
     print("Loaded ECG dataset.")
     visualize_dataset(data_ecg, 'ECG')
 
-    # 2. AWS Cloudwatch dataset
-    url_aws = "https://github.com/awslabs/cloudwatch-anomaly-detection-samples/raw/main/dataset/cloudwatch_dataset.csv"
-    try:
-        data_aws = pd.read_csv(url_aws)
-        datasets['AWS_Cloudwatch'] = data_aws
-        print("Loaded AWS Cloudwatch dataset.")
-        visualize_dataset(data_aws, 'AWS_Cloudwatch')
-    except Exception as e:
-        print(f"Failed to load AWS Cloudwatch dataset: {e}")
-    
     return datasets
 
 # Function to visualize a dataset
@@ -126,9 +114,6 @@ def classical_methods(X_train, y_train, X_test, y_test):
         'IsolationForest': IsolationForest(contamination=0.1),
         'OneClassSVM': OneClassSVM(nu=0.1),
         'LocalOutlierFactor': LocalOutlierFactor(novelty=True),
-        'RandomForest': RandomForestClassifier(),
-        'LogisticRegression': LogisticRegression(max_iter=1000),
-        'MLPClassifier': MLPClassifier(max_iter=1000)
     }
     
     results = {}
@@ -138,9 +123,6 @@ def classical_methods(X_train, y_train, X_test, y_test):
             model.fit(X_train)
             y_pred = model.predict(X_test)
             y_pred = np.where(y_pred == 1, 0, 1)  # Convert 1 -> 0 (normal), -1 -> 1 (anomaly)
-        else:
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
         
         accuracy = accuracy_score(y_test, y_pred)
         print(f"{name} accuracy: {accuracy:.2f}")
@@ -256,7 +238,7 @@ def visualize_results(datasets, results):
 # Main script execution
 def main():
     datasets = load_datasets()
-    results = run_comparison(datasets, window_size=16)
+    results = run_comparison(datasets, window_size=4)
     visualize_results(datasets, results)
 
 if __name__ == "__main__":
