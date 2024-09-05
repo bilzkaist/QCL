@@ -16,38 +16,45 @@ import os
 import matplotlib
 matplotlib.use('Agg')  # Use Agg backend for rendering plots without a display
 
-# Data preprocessing function
+# Preprocessing function for ECG dataset
 def preprocess_data(data, window_size=20):
-    print(f"Preprocessing data with window size {window_size}...")
+    print(f"Preprocessing ECG data with window size {window_size}...")
+
+    if data.empty:
+        raise ValueError("ECG dataset is empty.")
+
     scaler = MinMaxScaler(feature_range=(0, np.pi))
     
     if 'heart_rate' in data.columns:
+        print("Processing heart rate data...")
         data['heart_rate'] = scaler.fit_transform(data['heart_rate'].values.reshape(-1, 1))
         X = np.array([data['heart_rate'].values[i:i + window_size] for i in range(len(data) - window_size)])
         y_true = np.array([1 if hr > 0.8 else 0 for hr in data['heart_rate'][window_size:]])
     elif 'DEATH_EVENT' in data.columns:
+        print("Processing death event data...")
         data['DEATH_EVENT'] = scaler.fit_transform(data['DEATH_EVENT'].values.reshape(-1, 1))
         X = np.array([data['DEATH_EVENT'].values[i:i + window_size] for i in range(len(data) - window_size)])
         y_true = np.array([1 if val > 0.8 else 0 for val in data['DEATH_EVENT'][window_size:]])
     else:
-        print(f"Data columns available: {data.columns}")
-        raise ValueError("Unknown data format")
+        raise ValueError("Unknown data format in ECG dataset.")
     
     print("Preprocessing complete.")
     return X, y_true
 
-# Function to load and visualize datasets
+# Function to load and visualize ECG dataset
 def load_datasets():
-    print("Loading datasets...")
+    print("Loading ECG dataset...")
     datasets = {}
 
-    # 1. ECG dataset from UCI
+    # ECG dataset from UCI
     url_ecg = "https://archive.ics.uci.edu/ml/machine-learning-databases/00519/heart_failure_clinical_records_dataset.csv"
     data_ecg = pd.read_csv(url_ecg)
+    if data_ecg.empty:
+        raise ValueError("Failed to load ECG dataset.")
     datasets['ECG'] = data_ecg
     print("Loaded ECG dataset.")
     visualize_dataset(data_ecg, 'ECG')
-
+    
     return datasets
 
 # Function to visualize a dataset
@@ -57,8 +64,6 @@ def visualize_dataset(data, dataset_name):
         plt.plot(data.index, data['heart_rate'], label='Heart Rate')
     elif 'DEATH_EVENT' in data.columns:
         plt.plot(data.index, data['DEATH_EVENT'], label='Death Event')
-    else:
-        plt.plot(data.index, data.iloc[:, 0], label=data.columns[0])
     
     plt.title(f"{dataset_name} - Data Visualization")
     plt.xlabel('Timestamp')
@@ -184,6 +189,7 @@ def run_comparison(datasets, window_size=20):
 
     return results
 
+# Visualize results
 def visualize_results(datasets, results):
     for name, data in datasets.items():
         print(f"\nVisualizing results for dataset: {name}")
@@ -193,7 +199,7 @@ def visualize_results(datasets, results):
 
         test_indices = data.index[-len(res['y_test']):]
 
-        # 1. Data Visualization of Normal and Anomaly
+        # Data Visualization of Normal and Anomaly
         plt.figure(figsize=(14, 6))
         plt.plot(data.index, data[value_column], label=value_column.capitalize())
         y_test_array = np.array(res['y_test'])
@@ -208,7 +214,7 @@ def visualize_results(datasets, results):
         plt.savefig(f"{name}_data_visualization.png")
         plt.show()
 
-        # 2. Training Loss (0-100 iterations)
+        # Training Loss (0-100 iterations)
         plt.figure(figsize=(14, 6))
         plt.plot(range(len(res['loss_history'][:100])), res['loss_history'][:100], label='Training Loss (0-100 iterations)')
         plt.xlabel('Iteration')
@@ -218,7 +224,7 @@ def visualize_results(datasets, results):
         plt.savefig(f"{name}_training_loss.png")
         plt.show()
 
-        # 3. Anomaly Score
+        # Anomaly Score
         plt.figure(figsize=(14, 6))
         plt.plot(test_indices, res['anomaly_scores'], label='Anomaly Score')
         plt.axhline(y=res['threshold'], color='r', linestyle='--', label='Threshold')
@@ -229,7 +235,7 @@ def visualize_results(datasets, results):
         plt.savefig(f"{name}_anomaly_scores.png")
         plt.show()
 
-        # 4. Accuracy Scores
+        # Accuracy Scores
         print(f"{name} - Quantum Accuracy: {res['quantum_accuracy']:.2f}")
         print(f"{name} - Classical Models Accuracy:")
         for model_name, accuracy in res['classical_accuracies'].items():
