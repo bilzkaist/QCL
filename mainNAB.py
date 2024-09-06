@@ -12,77 +12,73 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import os
 
-# Set dataset path and file name for the bearing dataset
+# Set dataset path and file name for the NAB dataset
 dataset_path = "/home/bilz/Datasets/q/"
-dataset_name = "Bearing.csv"
+dataset_name = "NAB.csv"  # Updated to NAB dataset
 
 # Use a non-interactive backend to avoid "Wayland" issues
 import matplotlib
 matplotlib.use('Agg')  # Use Agg backend for rendering plots without a display
 
-# Preprocessing function for bearing dataset
+# Preprocessing function for NAB dataset
 def preprocess_data(data, window_size=20):
-    print(f"Preprocessing bearing data with window size {window_size}...")
+    print(f"Preprocessing NAB data with window size {window_size}...")
 
     if data.empty:
         raise ValueError("Dataset is empty.")
 
     scaler = MinMaxScaler(feature_range=(0, np.pi))
-    
-    # Process the bearing data
-    if 'Bearing 1' in data.columns:
-        print("Processing bearing data from 'Bearing 1'...")
-        data['Bearing 1'] = scaler.fit_transform(data['Bearing 1'].values.reshape(-1, 1))
-        X = np.array([data['Bearing 1'].values[i:i + window_size] for i in range(len(data) - window_size)])
-        y_true = np.array([1 if val > 0.8 else 0 for val in data['Bearing 1'][window_size:]])
+
+    # Process NAB dataset based on one or more key columns (e.g., 'age', 'ejection_fraction', etc.)
+    if 'serum_creatinine' in data.columns:
+        print("Processing NAB data from 'serum_creatinine'...")
+        data['serum_creatinine'] = scaler.fit_transform(data['serum_creatinine'].values.reshape(-1, 1))
+        X = np.array([data['serum_creatinine'].values[i:i + window_size] for i in range(len(data) - window_size)])
+        y_true = np.array([1 if val > 0.8 else 0 for val in data['serum_creatinine'][window_size:]])
     else:
         raise ValueError("Unknown data format in dataset.")
     
     print("Preprocessing complete.")
     return X, y_true
 
-
-
-# Function to load the bearing dataset from the local CSV file
+# Function to load the NAB dataset from the local CSV file
 def load_datasets():
-    print("Loading bearing dataset from local CSV file...")
+    print("Loading NAB dataset from local CSV file...")
     datasets = {}
 
     # Combine the path and name into a full file path
     file_path = dataset_path + dataset_name
-    data_bearing = pd.read_csv(file_path)
+    data_nab = pd.read_csv(file_path)
     
     # Check column names
-    print(f"Columns in the dataset: {data_bearing.columns}")
+    print(f"Columns in the dataset: {data_nab.columns}")
     
-    if data_bearing.empty:
+    if data_nab.empty:
         raise ValueError("Failed to load dataset.")
     
-    datasets['Bearing'] = data_bearing
-    print("Loaded bearing dataset.")
-    visualize_dataset(data_bearing, 'Bearing')
+    datasets['NAB'] = data_nab
+    print("Loaded NAB dataset.")
+    visualize_dataset(data_nab, 'NAB')
     
     return datasets
-
 
 # Function to visualize a dataset
 def visualize_dataset(data, dataset_name):
     plt.figure(figsize=(14, 6))
     
-    # Replace 'Bearing1' with the correct column name
-    if 'Vibration' in data.columns:
-        plt.plot(data.index, data['Vibration'], label='Vibration')
+    # Visualize NAB dataset (e.g., based on 'serum_creatinine' column)
+    if 'serum_creatinine' in data.columns:
+        plt.plot(data.index, data['serum_creatinine'], label='Serum Creatinine')
     
     plt.title(f"{dataset_name} - Data Visualization")
     plt.xlabel('Timestamp')
     plt.ylabel('Value')
     
-    # Add label if it exists, else skip legend
-    if 'Vibration' in data.columns:
+    # Add legend if it exists
+    if 'serum_creatinine' in data.columns:
         plt.legend()
     
     plt.savefig(f"{dataset_name}_data_visualization.png")  # Save plot as PNG
-
 
 # Quantum encoding function
 def encode_data(X):
@@ -208,17 +204,10 @@ def visualize_results(datasets, results):
         print(f"\nVisualizing results for dataset: {name}")
         res = results[name]
 
-        # Update this to match the actual column names in your dataset
-        if 'Bearing 1' in data.columns:
-            value_column = 'Bearing 1'
-        elif 'Bearing 2' in data.columns:
-            value_column = 'Bearing 2'
-        elif 'Bearing 3' in data.columns:
-            value_column = 'Bearing 3'
-        elif 'Bearing 4' in data.columns:
-            value_column = 'Bearing 4'
+        if 'serum_creatinine' in data.columns:
+            value_column = 'serum_creatinine'
         else:
-            raise ValueError("No valid bearing column found in dataset.")
+            raise ValueError("No valid column found in dataset.")
 
         test_indices = data.index[-len(res['y_test']):]
 
