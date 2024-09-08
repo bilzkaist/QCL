@@ -77,16 +77,15 @@ def load_nab_datasets():
     print(f"Loaded {len(datasets)} NAB datasets.")
     return datasets
 
-# Function to save results to a text file
-def save_results_to_file(results, file_path):
-    with open(file_path, 'w') as f:
-        for dataset_name, result in results.items():
-            f.write(f"Dataset: {dataset_name}\n")
-            f.write(f"Quantum Accuracy: {result['quantum_accuracy']:.4f}\n")
-            for model_name, acc in result['classical_accuracies'].items():
-                f.write(f"{model_name} Accuracy: {acc:.4f}\n")
-            f.write("\n")
-    print(f"Saved results to {file_path}")
+# Function to save results to a text file (appending results one by one)
+def save_results_to_file(dataset_name, result, file_path):
+    with open(file_path, 'a') as f:
+        f.write(f"Dataset: {dataset_name}\n")
+        f.write(f"Quantum Accuracy: {result['quantum_accuracy']:.4f}\n")
+        for model_name, acc in result['classical_accuracies'].items():
+            f.write(f"{model_name} Accuracy: {acc:.4f}\n")
+        f.write("\n")
+    print(f"Saved results for {dataset_name} to {file_path}")
 
 # Quantum encoding function
 def encode_data(X):
@@ -162,9 +161,13 @@ def calculate_smart_threshold(scores):
 # Main function to run the comparison on all NAB datasets
 def run_comparison(datasets, window_size=20):
     results = {}
+    total_datasets = len(datasets)
+    processed_datasets = 0
 
     for dataset_name, data in datasets.items():
-        print(f"\nProcessing dataset: {dataset_name}")
+        processed_datasets += 1
+        print(f"\nProcessing dataset: {dataset_name} ({processed_datasets}/{total_datasets} - {processed_datasets/total_datasets*100:.2f}%)")
+        
         X, y_true = preprocess_data(data, window_size)
 
         # Split the data into training and testing
@@ -212,6 +215,9 @@ def run_comparison(datasets, window_size=20):
             'threshold': smart_threshold
         }
 
+        # Save individual dataset results to the file after processing
+        save_results_to_file(dataset_name, results[dataset_name], results_path + "nab_results.txt")
+
         # Clear loss history for the next dataset
         loss_history.clear()
 
@@ -221,9 +227,6 @@ def run_comparison(datasets, window_size=20):
 def main():
     datasets = load_nab_datasets()
     results = run_comparison(datasets, window_size=4)
-    
-    # Save the results to a text file
-    save_results_to_file(results, results_path + "nab_results.txt")
     print(f"Results saved in nab_results.txt")
 
 if __name__ == "__main__":
