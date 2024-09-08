@@ -81,11 +81,18 @@ def load_nab_datasets():
 def save_results_to_file(dataset_name, result, file_path):
     with open(file_path, 'a') as f:
         f.write(f"Dataset: {dataset_name}\n")
-        f.write(f"Quantum Accuracy: {result['quantum_accuracy']:.4f}\n")
+        
+        if result['quantum_accuracy'] is not None:
+            f.write(f"Quantum Accuracy: {result['quantum_accuracy']:.4f}\n")
+        else:
+            f.write(f"Quantum Accuracy: No ground truth (unsupervised)\n")
+        
         for model_name, acc in result['classical_accuracies'].items():
             f.write(f"{model_name} Accuracy: {acc:.4f}\n")
+        
         f.write("\n")
     print(f"Saved results for {dataset_name} to {file_path}")
+
 
 # Quantum encoding function
 def encode_data(X):
