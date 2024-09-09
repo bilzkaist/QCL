@@ -52,8 +52,7 @@ def preprocess_data(data, window_size=20):
     print("Preprocessing complete.")
     return X, y_true
 
-
-# Function to load NAB dataset from the local CSV file
+# Function to load NAB datasets from the local CSV files
 def load_nab_datasets():
     print("Loading NAB datasets from local CSV files...")
     datasets = {}
@@ -92,7 +91,6 @@ def save_results_to_file(dataset_name, result, file_path):
         
         f.write("\n")
     print(f"Saved results for {dataset_name} to {file_path}")
-
 
 # Quantum encoding function
 def encode_data(X):
