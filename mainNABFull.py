@@ -92,6 +92,22 @@ def save_results_to_file(dataset_name, result, file_path):
         f.write("\n")
     print(f"Saved results for {dataset_name} to {file_path}")
 
+# Plotting function to visualize anomalies
+def plot_anomalies(dataset_name, y_true, y_pred_quantum, save_path):
+    plt.figure(figsize=(10, 6))
+    plt.plot(y_true, label='True Anomalies', alpha=0.7)
+    plt.plot(y_pred_quantum, label='Detected Anomalies (Quantum)', linestyle='--', alpha=0.7)
+    plt.title(f'{dataset_name} - Anomalies Detected: {sum(y_pred_quantum)}')
+    plt.legend()
+    plt.xlabel('Time Steps')
+    plt.ylabel('Anomalies')
+    
+    # Save the plot to the results folder
+    plot_file = os.path.join(save_path, f"{dataset_name}_anomalies.png")
+    plt.savefig(plot_file)
+    plt.close()
+    print(f"Anomaly plot saved for {dataset_name}.")
+
 # Quantum encoding function
 def encode_data(X):
     n_qubits = len(X)
@@ -222,6 +238,10 @@ def run_comparison(datasets, window_size=20):
 
         # Save individual dataset results to the file after processing
         save_results_to_file(dataset_name, results[dataset_name], results_path + "nab_results.txt")
+
+        # Plot the anomalies and save the plot
+        if y_test is not None:
+            plot_anomalies(dataset_name, y_test[:len(y_pred_quantum)], y_pred_quantum, results_path)
 
         # Clear loss history for the next dataset
         loss_history.clear()
